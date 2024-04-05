@@ -19,20 +19,45 @@ const blog = new Hono<{
 }>();
 
 blog
-  .post("/", async (c) => {
+  .get("/search", async (c) => {
     const prisma = new PrismaClient({
       datasourceUrl: c.env.DATABASE_URL,
     }).$extends(withAccelerate());
 
-    try {
-      const body = await c.req.json<CreatPost>();
+    const { title } = c.req.query();
 
-      const posts = await prisma.post.create({
-        data: { ...body, authorId: c.get("userid") },
+    try {
+      const blogs = await prisma.post.findMany({
+        where: {
+          title: {
+            contains: `%${title}%`,
+            mode: "insensitive",
+          },
+        },
+      });
+      c.status(200);
+      return c.json(blogs);
+    } catch (error) {
+      c.status(404);
+      return c.json(error);
+    }
+  })
+  .get("/:id", async (c) => {
+    const prisma = new PrismaClient({
+      datasourceUrl: c.env.DATABASE_URL,
+    }).$extends(withAccelerate());
+
+    const { id } = c.req.param();
+
+    try {
+      const post = await prisma.post.findUnique({
+        where: {
+          id,
+        },
       });
 
       c.status(201);
-      return c.json(posts);
+      return c.json(post);
     } catch (error) {
       c.status(404);
       return c.json(error);
@@ -73,27 +98,6 @@ blog
       return c.json(error);
     }
   })
-  .get("/:id", async (c) => {
-    const prisma = new PrismaClient({
-      datasourceUrl: c.env.DATABASE_URL,
-    }).$extends(withAccelerate());
-
-    const { id } = c.req.param();
-
-    try {
-      const post = await prisma.post.findUnique({
-        where: {
-          id,
-        },
-      });
-
-      c.status(201);
-      return c.json(post);
-    } catch (error) {
-      c.status(404);
-      return c.json(error);
-    }
-  })
   .get("/", async (c) => {
     const prisma = new PrismaClient({
       datasourceUrl: c.env.DATABASE_URL,
@@ -101,12 +105,39 @@ blog
 
     try {
       const blogs = await prisma.post.findMany({
+        relationLoadStrategy: "join",
+        include: {
+          author: {
+            select: {
+              name: true,
+            },
+          },
+        },
         orderBy: {
           modifiedAt: "desc",
         },
       });
       c.status(200);
       return c.json(blogs);
+    } catch (error) {
+      c.status(404);
+      return c.json(error);
+    }
+  })
+  .post("/", async (c) => {
+    const prisma = new PrismaClient({
+      datasourceUrl: c.env.DATABASE_URL,
+    }).$extends(withAccelerate());
+
+    try {
+      const body = await c.req.json<CreatPost>();
+
+      const posts = await prisma.post.create({
+        data: { ...body, authorId: c.get("userid") },
+      });
+
+      c.status(201);
+      return c.json(posts);
     } catch (error) {
       c.status(404);
       return c.json(error);
