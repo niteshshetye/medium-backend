@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { PrismaClient } from "@prisma/client/edge";
+import { verify } from "hono/jwt";
 
 type CreatPost = {
   title: string;
@@ -17,6 +18,38 @@ const blog = new Hono<{
     userid: string;
   };
 }>();
+
+/**
+ *  extract token from heading
+ *  verify token
+ *  if token is valid than next()
+ *  else give error if token is in valid
+ */
+
+blog.use("/*", async (c, next) => {
+  const authorization = c.req.header("authorization") || "";
+  const token = authorization.split(" ")[1];
+
+  if (!token) {
+    c.status(403);
+    return c.json({ message: "Unauthorized" });
+  }
+
+  try {
+    const payload = await verify(token, c.env.MY_JWT_SECRET);
+
+    if (payload.id) {
+      c.set("userid", payload.id);
+      await next();
+    } else {
+      c.status(403);
+      return c.json({ message: "Unauthorized" });
+    }
+  } catch (error) {
+    c.status(500);
+    return c.json(error);
+  }
+});
 
 blog
   .get("/search", async (c) => {
