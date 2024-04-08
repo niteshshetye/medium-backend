@@ -1,4 +1,4 @@
-# Steps to intialize the backend
+## Steps to intialize the backend
 
 1.  Create new folder
 
@@ -32,30 +32,51 @@
 
 5.  Migrate your database
 
-    - npx prisma migrate dev --name init_schema
-    - npx prisma generate --no-engine
+```
+    npx prisma migrate dev --name init_schema
+    npx prisma generate --no-engine
+```
 
 6.  Add the accelerate extension
 
+```
     - npm install @prisma/extension-accelerate
+```
 
 7.  Initialize the prisma client
 
-    `
-    import { PrismaClient } from '@prisma/client/edge'
-    import { withAccelerate } from '@prisma/extension-accelerate'
+```
+  import { PrismaClient } from '@prisma/client/edge'
+  import { withAccelerate } from '@prisma/extension-accelerate'
 
-    const prisma = new PrismaClient({
-    datasourceUrl: env.DATABASE_URL,
-    }).$extends(withAccelerate())
+  const prisma = new PrismaClient({
+  datasourceUrl: env.DATABASE_URL,
+  }).$extends(withAccelerate())
 
-    `
+```
+
+## Steps to deploy the backend
+
+1. Login with cloudflare
+
+   - for checkin is you login or not command
+
+   ```
+    npx wrangler whoami
+   ```
+
+   - for login
+
+   ```
+    npx wrangler login
+   ```
+
+2. Deploy your backend to cloudflare
+   ```
+    npm run dev => wrangler deploy --minify src/index.ts
+   ```
 
 ```
 npm install
 npm run dev
-```
-
-```
-npm run deploy
 ```
