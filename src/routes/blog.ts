@@ -2,12 +2,12 @@ import { Hono } from "hono";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { PrismaClient } from "@prisma/client/edge";
 import { verify } from "hono/jwt";
-
-type CreatPost = {
-  title: string;
-  content: string;
-  authorId: string;
-};
+import {
+  createPostBody,
+  CreatePostBody,
+  updatePostBody,
+  UpdatePostBody,
+} from "@niteshshetye/medium-common";
 
 const blog = new Hono<{
   Bindings: {
@@ -104,11 +104,11 @@ blog
     const { id } = c.req.param();
 
     try {
-      const body = await c.req.json();
+      const body = await c.req.json<UpdatePostBody>();
 
-      console.log(body);
+      const { success } = updatePostBody.safeParse(body);
 
-      if (!body) {
+      if (!success) {
         c.status(404);
         return c.json({ message: "Invalid input" });
       }
@@ -163,7 +163,14 @@ blog
     }).$extends(withAccelerate());
 
     try {
-      const body = await c.req.json<CreatPost>();
+      const body = await c.req.json<CreatePostBody>();
+
+      const { success } = createPostBody.safeParse(body);
+
+      if (!success) {
+        c.status(404);
+        return c.json({ message: "Invalid input" });
+      }
 
       const posts = await prisma.post.create({
         data: { ...body, authorId: c.get("userid") },
