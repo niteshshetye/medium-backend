@@ -73,7 +73,7 @@
 
 2. Deploy your backend to cloudflare
    ```
-    npm run dev => wrangler deploy --minify src/index.ts
+    npm run deploy => wrangler deploy --minify src/index.ts
    ```
 
 ```

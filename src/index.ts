@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { auth } from "./routes/auth";
 import { blog } from "./routes/blog";
 import { logger } from "hono/logger";
@@ -15,6 +16,7 @@ const app = new Hono<{
   };
 }>().basePath("/api/v1");
 
+app.use(cors());
 app.use(poweredBy());
 app.use(logger());
 
