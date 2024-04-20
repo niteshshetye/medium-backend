@@ -150,8 +150,13 @@ blog
           modifiedAt: "desc",
         },
       });
+
+      const updateblogs = blogs.map((blog) => ({
+        ...blog,
+        content: blog.content.substring(0, 250) + "...",
+      }));
       c.status(200);
-      return c.json(blogs);
+      return c.json(updateblogs);
     } catch (error) {
       c.status(404);
       return c.json(error);
