@@ -27,6 +27,11 @@ const blog = new Hono<{
  */
 
 blog.use("/*", async (c, next) => {
+  if (c.req.method === "GET") {
+    await next();
+
+    return;
+  }
   const authorization = c.req.header("authorization") || "";
   const token = authorization.split(" ")[1];
 
@@ -86,6 +91,17 @@ blog
       const post = await prisma.post.findUnique({
         where: {
           id,
+        },
+        select: {
+          content: true,
+          createAt: true,
+          title: true,
+          published: true,
+          author: {
+            select: {
+              name: true,
+            },
+          },
         },
       });
 
